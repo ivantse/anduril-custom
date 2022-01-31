@@ -1,3 +1,3 @@
 # Anduril customized builds
 
-Bespoke custom Anduril UI builds.
+Bespoke Anduril UI builds.
