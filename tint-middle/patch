@@ -1,0 +1,18 @@
+=== modified file 'ToyKeeper/spaghetti-monster/anduril/tint-ramping.c'
+--- ToyKeeper/spaghetti-monster/anduril/tint-ramping.c	2021-12-13 22:54:30 +0000
++++ ToyKeeper/spaghetti-monster/anduril/tint-ramping.c	2022-02-09 04:09:06 +0000
+@@ -97,6 +97,13 @@
+         return EVENT_HANDLED;
+     }
+ 
++    // click, click, click, hold: go to middle of tint ramp
++    else if (event == EV_click4_hold) {
++      tint = 127;
++      set_level(actual_level);
++      return EVENT_HANDLED;
++    }
++
+     return EVENT_NOT_HANDLED;
+ }
+ 
+
