@@ -1,0 +1,18 @@
+=== modified file 'ToyKeeper/spaghetti-monster/anduril/ramp-mode.c'
+--- ToyKeeper/spaghetti-monster/anduril/ramp-mode.c	2021-12-08 19:49:44 +0000
++++ ToyKeeper/spaghetti-monster/anduril/ramp-mode.c	2022-02-16 00:51:58 +0000
+@@ -411,6 +411,13 @@
+     }
+     #endif  // ifndef USE_TINT_RAMPING
+ 
++    #ifdef USE_STROBE_STATE
++    else if (event == EV_click4_hold) {
++        set_state(strobe_state, 0);
++        return MISCHIEF_MANAGED;
++    }
++    #endif
++
+     #ifdef USE_MOMENTARY_MODE
+     // 5 clicks: shortcut to momentary mode
+     else if (event == EV_5clicks) {
+
