@@ -7,6 +7,6 @@
 #undef USE_LOCKOUT_MODE
 #undef USE_AUTOLOCK
 #undef RGB_LED_OFF_DEFAULT
-#define RGB_LED_OFF_DEFAULT 0x15 // purple
+#define RGB_LED_OFF_DEFAULT 0x15 // low, purple
 
 #define OVERRIDES_FILE ali.c
