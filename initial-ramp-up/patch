@@ -1,0 +1,100 @@
+=== modified file 'ToyKeeper/spaghetti-monster/anduril/off-mode.c'
+--- ToyKeeper/spaghetti-monster/anduril/off-mode.c	2021-09-01 04:07:45 +0000
++++ ToyKeeper/spaghetti-monster/anduril/off-mode.c	2022-07-23 17:59:43 +0000
+@@ -137,15 +137,18 @@
+                 #endif
+             }
+         #endif
++        #ifdef USE_INITIAL_RAMP_UP
++        ramp_up_level(nearest_level(memorized_level));
++        #else 
+         set_level(nearest_level(memorized_level));
++        #endif
+         return MISCHIEF_MANAGED;
+     }
+     #endif  // if (B_TIMING_ON != B_TIMEOUT_T)
+     // 1 click: regular mode
+     else if (event == EV_1click) {
+         #if (B_TIMING_ON != B_TIMEOUT_T)
+-        // brightness was already set; reuse previous value
+-        set_state(steady_state, actual_level);
++        set_state(steady_state, nearest_level(memorized_level));
+         #else
+         // FIXME: B_TIMEOUT_T breaks manual_memory and manual_memory_timer
+         //        (need to duplicate manual mem logic here, probably)
+
+=== modified file 'ToyKeeper/spaghetti-monster/anduril/ramp-mode.c'
+--- ToyKeeper/spaghetti-monster/anduril/ramp-mode.c	2021-12-16 18:23:58 +0000
++++ ToyKeeper/spaghetti-monster/anduril/ramp-mode.c	2022-07-23 18:22:06 +0000
+@@ -113,7 +113,11 @@
+             memorized_level = arg;
+         // use the requested level even if not memorized
+         arg = nearest_level(arg);
++        #ifdef USE_INITIAL_RAMP_UP
++        ramp_up_level(arg);
++        #else
+         set_level_and_therm_target(arg);
++        #endif
+         ramp_direction = 1;
+         return MISCHIEF_MANAGED;
+     }
+@@ -304,6 +308,10 @@
+             }
+         }
+         #endif  // ifdef USE_SET_LEVEL_GRADUALLY
++
++        #ifdef USE_INITIAL_RAMP_UP
++        ramp_up_tick();
++        #endif
+         return MISCHIEF_MANAGED;
+     }
+ 
+
+=== modified file 'ToyKeeper/spaghetti-monster/fsm-ramping.c'
+--- ToyKeeper/spaghetti-monster/fsm-ramping.c	2022-04-15 03:27:08 +0000
++++ ToyKeeper/spaghetti-monster/fsm-ramping.c	2022-07-23 17:59:43 +0000
+@@ -231,6 +231,25 @@
+     #endif
+ }
+ 
++#ifdef USE_INITIAL_RAMP_UP
++inline void ramp_up_level(uint8_t lvl) {
++    ramp_up_target = lvl;
++    ramp_up_increment = ramp_up_target / (TICKS_PER_SECOND/4) + 1;
++}
++
++void ramp_up_tick() {
++    if (ramp_up_target > 0 && ramp_up_target > actual_level) {
++        if (actual_level+ramp_up_increment >= ramp_up_target) {
++            set_level(ramp_up_target);
++            // we're done now
++            ramp_up_target = 0;
++        } else {
++            set_level(actual_level + ramp_up_increment);
++        }
++    }
++}
++#endif
++
+ #ifdef USE_SET_LEVEL_GRADUALLY
+ inline void set_level_gradually(uint8_t lvl) {
+     gradual_target = lvl;
+
+=== modified file 'ToyKeeper/spaghetti-monster/fsm-ramping.h'
+--- ToyKeeper/spaghetti-monster/fsm-ramping.h	2021-10-31 08:35:49 +0000
++++ ToyKeeper/spaghetti-monster/fsm-ramping.h	2022-07-23 17:59:43 +0000
+@@ -42,6 +42,13 @@
+ void gradual_tick();
+ #endif
+ 
++#ifdef USE_INITIAL_RAMP_UP
++uint8_t ramp_up_target = 0;
++uint8_t ramp_up_increment = 1;
++inline void ramp_up_level(uint8_t lvl);
++void ramp_up_tick();
++#endif
++
+ #if defined(USE_TINT_RAMPING) && (!defined(TINT_RAMP_TOGGLE_ONLY))
+ void update_tint();
+ #endif
+
